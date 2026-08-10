@@ -2132,6 +2132,8 @@ __metadata:
     "@grafana/test-utils": "workspace:*"
     "@grafana/ui": "npm:13.2.0-pre"
     "@kusto/monaco-kusto": "npm:^10.0.0"
+    "@rspack/cli": "npm:^2.1.7"
+    "@rspack/core": "npm:^2.1.7"
     "@testing-library/dom": "npm:10.4.1"
     "@testing-library/jest-dom": "npm:6.6.4"
     "@testing-library/react": "npm:16.3.0"
@@ -2155,7 +2157,6 @@ __metadata:
     react-use: "npm:17.6.1"
     rxjs: "npm:7.8.2"
     typescript: "npm:6.0.2"
-    webpack: "npm:^5.105.0"
   peerDependencies:
     "@grafana/runtime": "*"
   languageName: unknown
@@ -2175,6 +2176,8 @@ __metadata:
     "@grafana/scenes": "npm:8.13.5"
     "@grafana/schema": "npm:13.2.0-pre"
     "@grafana/ui": "npm:13.2.0-pre"
+    "@rspack/cli": "npm:^2.1.7"
+    "@rspack/core": "npm:^2.1.7"
     "@testing-library/dom": "npm:10.4.1"
     "@testing-library/jest-dom": "npm:6.6.4"
     "@testing-library/react": "npm:16.3.0"
@@ -2199,7 +2202,6 @@ __metadata:
     react-use: "npm:17.6.1"
     rxjs: "npm:7.8.2"
     typescript: "npm:6.0.2"
-    webpack: "npm:^5.105.0"
   peerDependencies:
     "@grafana/runtime": "*"
   languageName: unknown
@@ -2252,6 +2254,8 @@ __metadata:
     "@grafana/schema": "npm:13.2.0-pre"
     "@grafana/ui": "npm:13.2.0-pre"
     "@reduxjs/toolkit": "npm:2.10.1"
+    "@rspack/cli": "npm:^2.1.7"
+    "@rspack/core": "npm:^2.1.7"
     "@testing-library/dom": "npm:10.4.1"
     "@testing-library/react": "npm:16.3.0"
     "@types/jest": "npm:29.5.14"
@@ -2270,7 +2274,6 @@ __metadata:
     rxjs: "npm:7.8.2"
     semver: "npm:7.7.3"
     typescript: "npm:6.0.2"
-    webpack: "npm:^5.105.0"
   peerDependencies:
     "@grafana/runtime": "*"
   languageName: unknown
