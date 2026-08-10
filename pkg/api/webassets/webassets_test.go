@@ -7,7 +7,71 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/grafana/grafana/pkg/services/featuremgmt"
+	"github.com/grafana/grafana/pkg/services/licensing/licensingtest"
+	"github.com/grafana/grafana/pkg/setting"
 )
+
+func TestBuildDir(t *testing.T) {
+	t.Run("resolves build when the rspack flag is off", func(t *testing.T) {
+		require.Equal(t, "build", BuildDir(context.Background()))
+	})
+
+	t.Run("resolves build-rspack when the rspack flag is on", func(t *testing.T) {
+		featuremgmt.WithEnabledFlags(t, featuremgmt.FlagGrafanaRspackBuild)
+
+		require.Equal(t, "build-rspack", BuildDir(context.Background()))
+	})
+}
+
+func TestGetWebAssetsBuildDir(t *testing.T) {
+	// Env must be dev so GetWebAssets skips its process-wide cache between subtests.
+	cfg := &setting.Cfg{Env: setting.Dev, StaticRootPath: "testdata"}
+	license := licensingtest.NewFakeLicensing()
+	license.On("ContentDeliveryPrefix").Return("grafana")
+
+	t.Run("flag off reads the webpack manifest", func(t *testing.T) {
+		ctx := context.Background()
+
+		assets, err := GetWebAssets(ctx, BuildDir(ctx), cfg, license)
+		require.NoError(t, err)
+		require.Equal(t, "public/build/runtime.js", assets.JSFiles[0].FilePath)
+	})
+
+	t.Run("flag on reads the rspack manifest", func(t *testing.T) {
+		featuremgmt.WithEnabledFlags(t, featuremgmt.FlagGrafanaRspackBuild)
+		ctx := context.Background()
+
+		assets, err := GetWebAssets(ctx, BuildDir(ctx), cfg, license)
+		require.NoError(t, err)
+		require.Equal(t, "public/build-rspack/runtime.js", assets.JSFiles[0].FilePath)
+	})
+}
+
+// Swagger passes its build dir literally rather than going through BuildDir, so the
+// rspack flag never applies to it.
+func TestGetWebAssetsSwagger(t *testing.T) {
+	featuremgmt.WithEnabledFlags(t, featuremgmt.FlagGrafanaRspackBuild)
+
+	cfg := &setting.Cfg{Env: setting.Dev, StaticRootPath: "testdata"}
+	license := licensingtest.NewFakeLicensing()
+	license.On("ContentDeliveryPrefix").Return("grafana")
+
+	assets, err := GetWebAssets(context.Background(), "build-swagger", cfg, license)
+	require.NoError(t, err)
+	require.Equal(t, "public/build-swagger/runtime.js", assets.JSFiles[0].FilePath)
+}
+
+func TestGetWebAssetsMissingBuildDir(t *testing.T) {
+	cfg := &setting.Cfg{Env: setting.Dev, StaticRootPath: "testdata"}
+	license := licensingtest.NewFakeLicensing()
+	license.On("ContentDeliveryPrefix").Return("grafana")
+
+	assets, err := GetWebAssets(context.Background(), "build-does-not-exist", cfg, license)
+	require.ErrorContains(t, err, "failed to load assets-manifest.json")
+	require.Nil(t, assets)
+}
 
 func TestReadWebassets(t *testing.T) {
 	assets, err := ReadWebAssetsFromFile("testdata/build/assets-manifest.json")

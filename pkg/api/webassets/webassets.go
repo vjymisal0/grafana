@@ -11,14 +11,40 @@ import (
 	"sync"
 
 	"github.com/grafana/grafana/pkg/api/dtos"
+	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/services/licensing"
 	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/util/httpclient"
+	"github.com/open-feature/go-sdk/openfeature"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 )
 
 var tracer = otel.Tracer("github.com/grafana/grafana/pkg/api/webassets")
+
+const (
+	// WebpackBuildDir holds the frontend assets built by webpack.
+	WebpackBuildDir = "build"
+	// RspackBuildDir holds the frontend assets built by rspack.
+	RspackBuildDir = "build-rspack"
+)
+
+var ofClient = openfeature.NewDefaultClient()
+
+// BuildDir returns the directory under the static root holding the frontend assets
+// to serve: rspack output when grafana.rspackBuild is enabled, webpack output
+// otherwise. Callers that serve a fixed asset set, such as swagger, pass their own
+// directory instead.
+//
+// The flag is evaluated per request so the frontend-service can roll rspack out to
+// one tenant at a time.
+func BuildDir(ctx context.Context) string {
+	rspack, _ := ofClient.BooleanValue(ctx, featuremgmt.FlagGrafanaRspackBuild, false, openfeature.TransactionContext(ctx))
+	if rspack {
+		return RspackBuildDir
+	}
+	return WebpackBuildDir
+}
 
 type ManifestInfo struct {
 	FilePath  string `json:"src,omitempty"`

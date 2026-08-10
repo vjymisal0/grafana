@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/grafana/grafana/pkg/api/webassets"
+	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	fswebassets "github.com/grafana/grafana/pkg/services/frontend/webassets"
 	"github.com/grafana/grafana/pkg/services/licensing/licensingtest"
 	"github.com/grafana/grafana/pkg/setting"
@@ -19,11 +21,36 @@ func TestGetWebAssets_WithoutCDNConfigured(t *testing.T) {
 	license.On("ContentDeliveryPrefix").Return("grafana")
 	ctx := context.Background()
 
-	assets, err := fswebassets.GetWebAssets(ctx, cfg, license)
+	assets, err := fswebassets.GetWebAssets(ctx, cfg, license, "build")
 	assert.NoError(t, err)
 	assert.NotNil(t, assets)
 
 	assert.Equal(t, "public/build/runtime.js", assets.JSFiles[0].FilePath)
+}
+
+func TestGetWebAssets_BuildDir(t *testing.T) {
+	cfg := &setting.Cfg{
+		StaticRootPath: "../../../api/webassets/testdata",
+	}
+	license := licensingtest.NewFakeLicensing()
+	license.On("ContentDeliveryPrefix").Return("grafana")
+	ctx := context.Background()
+
+	t.Run("flag off reads the webpack manifest", func(t *testing.T) {
+		assets, err := fswebassets.GetWebAssets(ctx, cfg, license, webassets.BuildDir(ctx))
+		assert.NoError(t, err)
+
+		assert.Equal(t, "public/build/runtime.js", assets.JSFiles[0].FilePath)
+	})
+
+	t.Run("flag on reads the rspack manifest", func(t *testing.T) {
+		featuremgmt.WithEnabledFlags(t, featuremgmt.FlagGrafanaRspackBuild)
+
+		assets, err := fswebassets.GetWebAssets(ctx, cfg, license, webassets.BuildDir(ctx))
+		assert.NoError(t, err)
+
+		assert.Equal(t, "public/build-rspack/runtime.js", assets.JSFiles[0].FilePath)
+	})
 }
 
 func TestGetWebAssets_PrefixFromLicense(t *testing.T) {
@@ -37,7 +64,7 @@ func TestGetWebAssets_PrefixFromLicense(t *testing.T) {
 	license.On("ContentDeliveryPrefix").Return("grafana-pro-max")
 	ctx := context.Background()
 
-	assets, err := fswebassets.GetWebAssets(ctx, cfg, license)
+	assets, err := fswebassets.GetWebAssets(ctx, cfg, license, "build")
 	assert.NoError(t, err)
 	assert.NotNil(t, assets)
 
@@ -54,7 +81,7 @@ func TestGetWebAssets_PrefixFromConfig(t *testing.T) {
 	license.On("ContentDeliveryPrefix").Return("should-not-be-used")
 	ctx := context.Background()
 
-	assets, err := fswebassets.GetWebAssets(ctx, cfg, license)
+	assets, err := fswebassets.GetWebAssets(ctx, cfg, license, "build")
 	assert.NoError(t, err)
 	assert.NotNil(t, assets)
 
@@ -72,7 +99,7 @@ func TestGetWebAssets_PrefixFromConfigTrailingSlash(t *testing.T) {
 	license.On("ContentDeliveryPrefix").Return("should-not-be-used")
 	ctx := context.Background()
 
-	assets, err := fswebassets.GetWebAssets(ctx, cfg, license)
+	assets, err := fswebassets.GetWebAssets(ctx, cfg, license, "build")
 	assert.NoError(t, err)
 	assert.NotNil(t, assets)
 
