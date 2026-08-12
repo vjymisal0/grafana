@@ -225,6 +225,7 @@ func NewStorageBackend(
 		SearchLookback:          cfg.SearchLookback,
 		WatchOptions:            resource.WatchOptions{SettleDelay: cfg.NotifierSettleDelay},
 		DashboardVersionsToKeep: cfg.DashboardVersionsToKeep,
+		DisableStorageServices:  disableStorageServices,
 	}
 
 	for _, opt := range opts {
